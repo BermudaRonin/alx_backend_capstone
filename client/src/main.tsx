@@ -2,11 +2,11 @@ import './index.css'
 // import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from "react-router";
-import TasksPage from "./pages/tasks.tsx";
-import AuthPage from "./pages/auth.tsx";
+import TasksPage from "./components/pages/TasksPage.tsx";
+import AuthPage from "./components/pages/AuthPage.tsx";
 import { AuthProvider } from './logic/auth.ctx.tsx';
 import { TasksProvider } from './logic/tasks.ctx.tsx';
-import Root from './components/website/root.tsx';
+import RootLayout from './components/RootLayout.tsx';
 
 
 let router = createBrowserRouter([
@@ -18,9 +18,9 @@ createRoot(document.getElementById('root')!).render(
     // <StrictMode>
         <AuthProvider>
             <TasksProvider>
-                <Root>
+                <RootLayout>
                     <RouterProvider router={router} />
-                </Root>
+                </RootLayout>
             </TasksProvider>
         </AuthProvider>
     // </StrictMode>,

@@ -8,20 +8,16 @@
   padding: 0;
 }
 
-button {
-  font: inherit;
-  border: unset;
-  background-color: rgba(255, 255, 255, 0.075);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+
 
 :root {
   --bg: rgb(8, 1, 15);
-  --bg-auto: rgba(0, 0, 0, 0.559);
+  --bg-auto: rgba(0, 0, 0, 0.76);
   --fg: rgb(203, 203, 203);
   --danger: rgb(110, 19, 19);
+  
+  --accent: rgb(23, 152, 161);
+  --muted: rgb(137, 137, 137);
 }
 
 
@@ -52,23 +48,13 @@ body {
   @apply bg-gradient-to-br from-indigo-900 via-green-700 to-purple-900;
 }
 
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 6rem 1rem;
-}
-
-.card {
-  padding: 2em;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: var(--bg-auto);
-  color: var(--fg);
-  margin-bottom: 1rem;
-
+button {
+  font: inherit;
+  border: unset;
+  background-color: unset;
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  align-items: center;
+  justify-content: center;
 }
 
 h1 {

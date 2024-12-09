@@ -1,8 +1,8 @@
-import { Task } from "../../types";
+import { Task } from "../types";
 import { twMerge } from 'tailwind-merge'
 import { MdDeleteSweep, MdEditNote } from "react-icons/md";
 import { useState } from "react";
-import Dialog from "../ui/Dialog";
+import Dialog from "./ui/Dialog";
 
 interface Props {
     task: Task

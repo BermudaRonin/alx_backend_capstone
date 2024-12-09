@@ -1,6 +1,6 @@
 import { useContext } from "react"
-import { TasksContext } from "../../logic/tasks.ctx";
-import TaskItem from "../task";
+import { TasksContext } from "../logic/tasks.ctx";
+import TaskItem from "./TaskItem";
 
 export default function TasksList() {
     const { tasks, state } = useContext(TasksContext);
