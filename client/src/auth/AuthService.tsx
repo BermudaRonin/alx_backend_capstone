@@ -1,5 +1,6 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { TokenResponse, User } from "../api/types";
+import * as actions from "../api/actions";
 
 type AuthContextType = {
     token: string | null;
@@ -27,7 +28,25 @@ export const AuthService = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
     };
 
-    const value : AuthContextType = { token, user, isAuthenticated: !!token, login, logout };
+    useEffect(() => {
+        const getCurrentUser  = async () => {
+            if (!token) return; // Avoid unnecessary API call if no token
+
+            const response = await actions.getCurrentUser ();
+            if ('error' in response) {
+                console.error("Failed to fetch current user:", response.error);
+                return logout(); // Optionally handle error more gracefully
+            }
+            login(response);
+        };
+
+        if (token && !user) {
+            getCurrentUser ();
+        }
+    }, [token, user]);
+
+
+    const value: AuthContextType = { token, user, isAuthenticated: !!token && !!user, login, logout };
 
     return (
         <AuthContext.Provider value={value}>

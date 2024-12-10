@@ -12,6 +12,8 @@ const useLoading = () => {
     return {
         State,
         isLoading: state === State.PENDING,
+        isSuccess: state === State.FULFILLED,
+        isFailure: state === State.REJECTED,
         startLoading: () => setState(State.PENDING),
         stopLoading: (success : boolean) => success ? setState(State.FULFILLED) : setState(State.REJECTED),
         resetLoading: () => setState(State.IDLE)

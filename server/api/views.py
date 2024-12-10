@@ -42,23 +42,20 @@ def registerUser(request):
     username = data.get("username")
     password = data.get("password")
 
-    valid = username and password
-    if not valid:
+    if not username or not password:
         return Response(
             {"error": "Username and password are required"}, status=HTTP_400_BAD_REQUEST
         )
 
-    exists = User.objects.filter(username=username).exists()
-    if exists:
+    if User.objects.filter(username=username).exists():
         return Response(
             {"error": "Username already exists"}, status=HTTP_400_BAD_REQUEST
         )
 
     user = User.objects.create_user(username=username, password=password)
-    return Response(
-        {"message": "User registered successfully", "id": user.id},
-        status=HTTP_201_CREATED,
-    )
+    token, _ = Token.objects.get_or_create(user=user)
+    serializer = UserSerializer(user, many=False)
+    return Response({"user": serializer.data, "token": token.key}, status=HTTP_201_CREATED)
 
 
 @api_view(["POST"])
@@ -67,8 +64,7 @@ def loginUser(request):
     username = data.get("username")
     password = data.get("password")
 
-    valid = username and password
-    if not valid:
+    if not username or not password:
         return Response(
             {"error": "Username and password are required"}, status=HTTP_400_BAD_REQUEST
         )
@@ -78,13 +74,8 @@ def loginUser(request):
         return Response({"error": "Invalid credentials"}, status=HTTP_400_BAD_REQUEST)
 
     token, _ = Token.objects.get_or_create(user=user)
-    return Response(
-        {
-            "message": "User logged in successfully",
-            "token": token.key,
-            "id": user.id,  # for testing purposes
-        }
-    )
+    serializer = UserSerializer(user, many=False)
+    return Response({"user": serializer.data, "token": token.key})
 
 
 @api_view(["GET", "PATCH", "DELETE"])
@@ -95,14 +86,14 @@ def currentUser(request):
         user = request.user
         user = User.objects.get(id=user.id)
         serializer = UserSerializer(user, many=False)
+
         return Response(serializer.data)
 
     elif request.method == "PATCH":
         return Response({"message": "User details updated successfully"})
-    
+
     elif request.method == "DELETE":
         return Response({"message": "User deleted successfully"})
-    
 
 
 ## Tasks Views
@@ -120,15 +111,15 @@ def tasks(request):
             return Response(serializer.data, HTTP_201_CREATED)
         else:
             return Response(serializer.errors, HTTP_400_BAD_REQUEST)
-        
+
     elif request.method == "GET":
-        completed = request.GET.get('completed', '')
-        
-        if completed == 'true':
+        completed = request.GET.get("completed", "")
+
+        if completed == "true":
             data = Task.objects.filter(owner=request.user, is_completed=True)
             serializer = TaskSerializer(data, many=True)
             return Response(serializer.data)
-        elif completed == 'false':
+        elif completed == "false":
             data = Task.objects.filter(owner=request.user, is_completed=False)
             serializer = TaskSerializer(data, many=True)
             return Response(serializer.data)
@@ -137,7 +128,9 @@ def tasks(request):
             serializer = TaskSerializer(data, many=True)
             return Response(serializer.data)
     else:
-        return JsonResponse({"error": "Invalid request method"}, status=HTTP_400_BAD_REQUEST)
+        return JsonResponse(
+            {"error": "Invalid request method"}, status=HTTP_400_BAD_REQUEST
+        )
 
 
 @api_view(["GET", "PATCH", "DELETE"])
@@ -164,12 +157,14 @@ def task(request, id):
         task = Task.objects.get(id=id)
         task.delete()
         return JsonResponse({"message": "Task deleted successfully"})
-    else: 
-        return JsonResponse({"error": "Invalid request method"}, status=HTTP_400_BAD_REQUEST)
+    else:
+        return JsonResponse(
+            {"error": "Invalid request method"}, status=HTTP_400_BAD_REQUEST
+        )
+
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-
 def markTaskAsCompleted(request, id):
     task = Task.objects.get(id=id)
     task.is_completed = True
@@ -180,9 +175,9 @@ def markTaskAsCompleted(request, id):
     else:
         return JsonResponse(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
+
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-
 def markTaskAsPending(request, id):
     task = Task.objects.get(id=id)
     task.is_completed = False

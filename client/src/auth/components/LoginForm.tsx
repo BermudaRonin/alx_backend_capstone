@@ -1,73 +1,58 @@
-import { useState } from "react"
 import * as classNames from '../../website/classnames'
 import * as actions from '../../api/actions'
 import { useAuth } from "../hooks";
+import { TokenResponse } from "../../api/types";
+import useLoading from "../../website/utils/useLoader";
+import useValue from "../../website/utils/useValue";
+import { FormInputRow } from '../../website/ui/Form';
 
-enum State {
-    IDLE = "idle",
-    PENDING = "pending",
-    REJECTED = "rejected",
-    FULFILLED = "fulfilled"
-}
-interface Value {
-    username: string;
-    password: string;
-    errorMessage: string;
-}
 
-export default function LoginForm() {
-    const { login } = useAuth()
-    const [state, setState] = useState(State.IDLE);
-    const [value, setValue] = useState<Value>({
+
+export default function RegisterForm() {
+    const defaultValue = {
         username: "",
         password: "",
-        errorMessage: ""
-    })
-    const updateValue = (k: keyof Value, v: string) => setValue({ ...value, [k]: v });
-
-    function onError(errorMessage?: string) {
-        setState(State.REJECTED);
-        errorMessage && setValue({ ...value, errorMessage });
+        msg: ""
     }
+    const value = useValue<typeof defaultValue>(defaultValue);
 
-    function onSuccess(token: string) {
-        setState(State.FULFILLED);
-        login(token);
-        setValue({ ...value, errorMessage: "" });
+    const { login } = useAuth()
+    const { isLoading, startLoading, stopLoading, resetLoading } = useLoading();
+
+    function onError(msg: string) {
+        value.set('msg', msg);
+        stopLoading(false);
+    }
+    function onSuccess(tokenResponse: TokenResponse) {
+        login(tokenResponse);
+        stopLoading(true);
+    }
+    function onReset() {
+        resetLoading();
+        value.reset();
     }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const { password, username } = value
-        setState(State.PENDING);
-        const response = await actions.loginUser({ username, password });
-        if (response.error) return onError(response.error);
-        const { token } = response
-        onSuccess(token);
+        startLoading();
+        const response = await actions.loginUser(value.get('username', 'password'));
+        if ('error' in response) return onError(response.error);
+        return onSuccess(response);
     }
 
     const handleReset = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setState(State.IDLE);
-        setValue({ username: "", password: "", errorMessage: "" });
+        onReset()
     }
 
-
     return <form className={classNames.form.root} onReset={handleReset} onSubmit={handleSubmit}>
-        {value.errorMessage && <div className={[classNames.form.row, classNames.form.error].join(" ")}>
-            {value.errorMessage}
-        </div>}
-        <div className={classNames.form.row}>
-            <label className={classNames.form.label}>Username</label>
-            <input className={classNames.form.input} value={value.username} onChange={(e) => updateValue('username', e.target.value)} />
-        </div>
-        <div className={classNames.form.row}>
-            <label className={classNames.form.label}>Password</label>
-            <input className={classNames.form.input} type="password" value={value.password} onChange={(e) => updateValue('password', e.target.value)} />
-        </div>
+        {value.get('msg') && <div className={[classNames.form.row, classNames.form.error].join(" ")}>{value.get('msg')}</div>}
+
+        <FormInputRow label="Username" name="username" value={value} />
+        <FormInputRow label="Password" name="password" value={value} />
         <div className={classNames.form.actions}>
             <button className={classNames.form.reset} type="reset">Reset</button>
-            <button className={classNames.form.submit} type="submit">Login</button>
+            <button className={classNames.form.submit} type="submit">Register</button>
         </div>
     </form>
 }

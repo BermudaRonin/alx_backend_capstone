@@ -18,4 +18,7 @@ export type TokenResponse = {
     token: string;
     user: User
 }
-
+export type TasksQuery = {
+    completedOnly?: boolean;
+    pendingOnly?: boolean;
+}

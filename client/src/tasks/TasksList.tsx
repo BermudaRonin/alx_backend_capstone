@@ -4,54 +4,38 @@ import { Task } from "../api/types.ts";
 
 import * as actions from '../api/actions.ts'
 import { useAuth } from "../auth/hooks.ts";
+import useLoader from "../website/utils/useLoader.ts";
+import useValues from "../website/utils/useValue.ts";
+import useValue from "../website/utils/useValue.ts";
 
-enum State {
-    IDLE = "idle",
-    PENDING = "pending",
-    REJECTED = "rejected",
-    FULFILLED = "fulfilled"
-}
+
+
+
 
 export default function TasksList() {
-    const { token } = useAuth();
-    const [state, setState] = useState<State>(State.IDLE);
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [errorMessage, setErrorMessage] = useState<string>("");
+    const defaultValue = {
+        data: [] as Task[],
+        msg: "" as string
+    }
+    const value = useValue<typeof defaultValue>(defaultValue);
+    const loader = useLoader();
 
     useEffect(() => {
         const getTasks = async () => {
-            setState(State.PENDING);
-            setErrorMessage("");
-            const { data, error } = await actions.getTasks({ 
-                token : token || ""
-            })
-            if (data) {
-                setTasks(data);
-                setState(State.FULFILLED);
-            } else {
-                setErrorMessage(error);
-                setTasks([]);
-                setState(State.REJECTED)
-            }
+            loader.startLoading();
+            const responseData = await actions.getTasks()
+            console.log({ responseData })
         }
         getTasks();
     }, [])
 
-    if (state === State.FULFILLED) {
-        if (tasks.length === 0) {
-            <div>
-                No tasks - create one
-            </div>
-        }
-
+    if (loader.isSuccess) {
+        if (value.isEmptyArray("data")) return <div> No tasks </div>
         return <div style={{ display: "flex", flexDirection: "column", gap: ".5rem" }}>
-            {tasks.map((task) => <TaskItem key={task.name} task={task} />)}
+            {value.get("data").map((task) => <TaskItem key={task.name} task={task} />)}
         </div>
     }
-    if (state === State.REJECTED) {
-        return <div> Error {errorMessage}</div>
-    }
-
+    if (loader.isFailure) return <div> Error {value.get("msg")}</div>
     return <div> Loading ... </div>
 
 }
